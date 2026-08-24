@@ -20,31 +20,37 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+export interface CountryOption {
+  value: string;
+  label: string;
+}
+
 interface CountryMultiSelectProps {
-  countries: readonly string[];
+  options: CountryOption[];
   selected: string[];
-  onSelectedChange: (countries: string[]) => void;
+  onSelectedChange: (values: string[]) => void;
   placeholder?: string;
 }
 
 export function CountryMultiSelect({
-  countries,
+  options,
   selected,
   onSelectedChange,
   placeholder = "Select countries…",
 }: CountryMultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const labelByValue = new Map(options.map((option) => [option.value, option.label]));
 
-  function toggleCountry(country: string) {
-    if (selected.includes(country)) {
-      onSelectedChange(selected.filter((c) => c !== country));
+  function toggleCountry(value: string) {
+    if (selected.includes(value)) {
+      onSelectedChange(selected.filter((v) => v !== value));
     } else {
-      onSelectedChange([...selected, country]);
+      onSelectedChange([...selected, value]);
     }
   }
 
-  function removeCountry(country: string) {
-    onSelectedChange(selected.filter((c) => c !== country));
+  function removeCountry(value: string) {
+    onSelectedChange(selected.filter((v) => v !== value));
   }
 
   return (
@@ -78,14 +84,14 @@ export function CountryMultiSelect({
             <CommandList>
               <CommandEmpty>No country found.</CommandEmpty>
               <CommandGroup>
-                {countries.map((country) => (
+                {options.map((option) => (
                   <CommandItem
-                    key={country}
-                    value={country}
-                    data-checked={selected.includes(country)}
-                    onSelect={() => toggleCountry(country)}
+                    key={option.value}
+                    value={option.label}
+                    data-checked={selected.includes(option.value)}
+                    onSelect={() => toggleCountry(option.value)}
                   >
-                    {country}
+                    {option.label}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -96,16 +102,16 @@ export function CountryMultiSelect({
 
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {selected.map((country) => (
-            <Badge key={country} variant="secondary" className="gap-1 pr-1">
-              {country}
+          {selected.map((value) => (
+            <Badge key={value} variant="secondary" className="gap-1 pr-1">
+              {labelByValue.get(value) ?? value}
               <button
                 type="button"
-                onClick={() => removeCountry(country)}
+                onClick={() => removeCountry(value)}
                 className="rounded-full p-0.5 hover:bg-foreground/10"
               >
                 <X className="size-3" />
-                <span className="sr-only">Remove {country}</span>
+                <span className="sr-only">Remove {labelByValue.get(value) ?? value}</span>
               </button>
             </Badge>
           ))}

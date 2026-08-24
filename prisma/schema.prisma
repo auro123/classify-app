@@ -16,8 +16,13 @@ model Analysis {
   filename     String
   country      String
   contractText String
-  result       Json
-  overallRisk  String
+  result       Json?
+  overallRisk  String?
+  // "processing" | "completed" | "failed" — only meaningfully "processing" or
+  // "failed" for rows created by the fire-and-forget comparison flow; rows
+  // created once their analysis is already in hand default to "completed".
+  status       String  @default("completed")
+  errorMessage String?
 
   comparisonGroupId String?
   comparisonGroup   ComparisonGroup? @relation(fields: [comparisonGroupId], references: [id])

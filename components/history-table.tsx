@@ -90,7 +90,7 @@ export function HistoryTable({ rows }: HistoryTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {row.createdAt.toLocaleDateString(undefined, {
+                    {row.createdAt.toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",

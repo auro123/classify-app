@@ -15,7 +15,7 @@ export default async function HistoryPage() {
       id: analysis.id,
       filename: analysis.filename,
       country: analysis.country,
-      overallRisk: analysis.overallRisk,
+      overallRisk: analysis.overallRisk ?? analysis.status,
       recommendedNextStep: result.success ? result.data.recommendedNextStep : "unknown",
       createdAt: analysis.createdAt,
     };
