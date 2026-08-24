@@ -6,7 +6,7 @@ import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { analyzeContractAction } from "@/app/actions/analyze";
-import { COUNTRIES } from "@/lib/countries";
+import { JURISDICTION_LIST } from "@/lib/jurisdictions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -23,11 +23,11 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function SingleCountryPanel() {
   const [files, setFiles] = useState<File[]>([]);
-  const [country, setCountry] = useState<string>("");
+  const [jurisdictionSlug, setJurisdictionSlug] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const canAnalyze = files.length > 0 && country !== "" && !isPending;
+  const canAnalyze = files.length > 0 && jurisdictionSlug !== "" && !isPending;
 
   function handleAnalyze() {
     const file = files[0];
@@ -35,7 +35,7 @@ export function SingleCountryPanel() {
 
     startTransition(async () => {
       try {
-        const { id } = await analyzeContractAction(file);
+        const { id } = await analyzeContractAction(file, jurisdictionSlug);
         router.push(`/results/${id}`);
       } catch (error) {
         console.error(error);
@@ -65,14 +65,14 @@ export function SingleCountryPanel() {
 
         <div className="space-y-2">
           <Label htmlFor="single-country">Country</Label>
-          <Select value={country} onValueChange={setCountry}>
+          <Select value={jurisdictionSlug} onValueChange={setJurisdictionSlug}>
             <SelectTrigger id="single-country" className="w-full">
               <SelectValue placeholder="Select a country" />
             </SelectTrigger>
             <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+              {JURISDICTION_LIST.map((jurisdiction) => (
+                <SelectItem key={jurisdiction.slug} value={jurisdiction.slug}>
+                  {jurisdiction.name}
                 </SelectItem>
               ))}
             </SelectContent>

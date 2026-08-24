@@ -1,7 +1,7 @@
 "use server";
 
 import { analyzeContract } from "@/lib/analyzeContract";
-import { france } from "@/lib/jurisdictions/france";
+import { JURISDICTIONS } from "@/lib/jurisdictions";
 import prisma from "@/lib/prisma";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -9,7 +9,15 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 // image with no OCR layer) rather than trying to analyze near-empty content.
 const MIN_EXTRACTABLE_TEXT_LENGTH = 50;
 
-export async function analyzeContractAction(file: File): Promise<{ id: string }> {
+export async function analyzeContractAction(
+  file: File,
+  jurisdictionSlug: string
+): Promise<{ id: string }> {
+  const jurisdiction = JURISDICTIONS[jurisdictionSlug];
+  if (!jurisdiction) {
+    throw new Error("Please select a valid country.");
+  }
+
   // Client-side validation can be bypassed, so re-check both conditions here.
   const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
   if (!isPdf) {
@@ -41,12 +49,12 @@ export async function analyzeContractAction(file: File): Promise<{ id: string }>
     );
   }
 
-  const result = await analyzeContract(contractText, france);
+  const result = await analyzeContract(contractText, jurisdiction);
 
   const analysis = await prisma.analysis.create({
     data: {
       filename: file.name,
-      country: france.name,
+      country: jurisdiction.name,
       contractText,
       result,
       overallRisk: result.overallRisk,
