@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { FileDropzone } from "@/components/file-dropzone";
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export function SingleCountryPanel() {
   const [files, setFiles] = useState<File[]>([]);
   const [country, setCountry] = useState<string>("");
@@ -50,7 +52,15 @@ export function SingleCountryPanel() {
       <CardContent className="space-y-6 pt-6">
         <div className="space-y-2">
           <Label>PDF document</Label>
-          <FileDropzone files={files} onFilesChange={setFiles} multiple={false} />
+          <FileDropzone
+            files={files}
+            onFilesChange={setFiles}
+            multiple={false}
+            maxSizeBytes={MAX_FILE_SIZE_BYTES}
+            onFileRejected={(file, reason) => {
+              toast.error(`Couldn't add "${file.name}"`, { description: reason });
+            }}
+          />
         </div>
 
         <div className="space-y-2">

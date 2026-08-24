@@ -19,6 +19,8 @@ interface FileDropzoneProps {
   accept?: string;
   title?: string;
   description?: string;
+  maxSizeBytes?: number;
+  onFileRejected?: (file: File, reason: string) => void;
 }
 
 export function FileDropzone({
@@ -28,6 +30,8 @@ export function FileDropzone({
   accept = "application/pdf",
   title,
   description,
+  maxSizeBytes,
+  onFileRejected,
 }: FileDropzoneProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,15 +39,29 @@ export function FileDropzone({
 
   function addFiles(incoming: FileList | null) {
     if (!incoming || incoming.length === 0) return;
-    const incomingFiles = Array.from(incoming).filter((file) =>
-      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
-    );
-    if (incomingFiles.length === 0) return;
+
+    const acceptedFiles: File[] = [];
+    for (const file of Array.from(incoming)) {
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      if (!isPdf) {
+        onFileRejected?.(file, "Only PDF files are supported.");
+        continue;
+      }
+      if (maxSizeBytes && file.size > maxSizeBytes) {
+        onFileRejected?.(
+          file,
+          `File is larger than ${formatFileSize(maxSizeBytes)}. Please upload a smaller PDF.`
+        );
+        continue;
+      }
+      acceptedFiles.push(file);
+    }
+    if (acceptedFiles.length === 0) return;
 
     if (multiple) {
-      onFilesChange([...files, ...incomingFiles]);
+      onFilesChange([...files, ...acceptedFiles]);
     } else {
-      onFilesChange([incomingFiles[0]]);
+      onFilesChange([acceptedFiles[0]]);
     }
   }
 

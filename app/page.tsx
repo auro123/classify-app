@@ -6,6 +6,8 @@ import { SingleCountryPanel } from "@/components/single-country-panel";
 import { CompareCountriesPanel } from "@/components/compare-countries-panel";
 import { BatchUploadPanel } from "@/components/batch-upload-panel";
 
+export const maxDuration = 60;
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
