@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+
 import { analyzeContract } from "@/lib/analyzeContract";
 import { analysisResultSchema, type AnalysisResult } from "@/lib/analysisSchema";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -96,11 +98,15 @@ export async function analyzeComparisonAction(
 
   // Fire off one analysis per country without awaiting — the group id is
   // returned to the caller immediately, and each country's row is updated
-  // independently as its own call finishes (or fails).
+  // independently as its own call finishes (or fails). Scheduled via after()
+  // rather than a bare fire-and-forget promise: on Vercel, the serverless
+  // function is frozen/torn down right after the response is sent, which
+  // would otherwise kill this work before it ever reaches the try/catch
+  // below. after() keeps the invocation alive until it settles.
   for (const [index, jurisdiction] of jurisdictions.entries()) {
     const analysisId = analyses[index].id;
 
-    void (async () => {
+    after(async () => {
       try {
         const result = await analyzeContract(contractText, jurisdiction);
         await prisma.analysis.update({
@@ -115,9 +121,9 @@ export async function analyzeComparisonAction(
         const errorMessage = error instanceof Error ? error.message : "Analysis failed.";
 
         // This update itself can fail (e.g. a transient DB blip). Nothing
-        // awaits this IIFE, so an uncaught rejection here would otherwise be
-        // unhandled — on some Node versions that terminates the whole
-        // process, silently leaving every other in-flight row stuck on
+        // awaits this callback, so an uncaught rejection here would
+        // otherwise be unhandled — on some Node versions that terminates the
+        // whole process, silently leaving every other in-flight row stuck on
         // "processing" too. Catch and log instead of letting that happen.
         try {
           await prisma.analysis.update({
@@ -134,7 +140,7 @@ export async function analyzeComparisonAction(
           );
         }
       }
-    })();
+    });
   }
 
   return { groupId: group.id };
